@@ -13,6 +13,11 @@ easy project setup without the need to create tedious build rules or dependency 
 * Generates version numbers based on git or subversion tags (see below), which are passed the compiler as preprocessor macros or external references (see test directory).
 * By default, builds in a "verbose" mode which allows you to see the full compiler commands being issued. By passing V=false to make, you can compile with only an output for the actions being performed.
 * Automatically added Build Date and Build Number Symbols which can be extracted from the generated lib or executable with the 'getVersion.sh' script included in this repository. Examples follow below.
+* Supported make flags are:
+	* clean - removes all compiled or generated data
+	* release - builds an optimized release build of the project
+	* debug - builds an gdb debuggable build of this project
+	* reset - resets build number
 
 ##Versioning:
 Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJOR, MINOR and PATCH are numeric. The following macros will be generated and passed to the preprocessor:
