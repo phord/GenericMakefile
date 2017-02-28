@@ -160,28 +160,29 @@ ifeq ($(USE_GIT), true)
 			-D VERSION_MAJOR=$(VERSION_MAJOR) \
 			-D VERSION_MINOR=$(VERSION_MINOR) \
 			-D VERSION_PATCH=$(VERSION_PATCH) \
-			-D VERSION_REVISION=$(VERSION_REVISION) \
-			-D VERSION_HASH=\"$(VERSION_HASH)\" \
-			-D BUILD_NUMBER=$(BUILD_NUMBER)
+			-D VERSION_REVISION=$(VERSION_REVISION)
 	endif
 else ifeq ($(USE_SVN), true)
 	USE_VERSION := true
 	IS_TRUNK := $(shell svn info | sed -nr 's/URL:.*\/trunk.*/true/p')
 	ifeq ($(IS_TRUNK), true)
-		# write REV and BUILD
+		# write REVISION information.
 		VERSION_REVISION := $(shell svn info | sed -nr 's/Revision:[ \t]([0-9]*)/\1/p')
 		ifeq ($(IS_LIB),true)
 			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_REVISION_REF=$(VERSION_REVISION)
 		else
 			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_REVISION_REF=$(VERSION_REVISION)
 		endif
+		override CXXFLAGS := $(CXXFLAGS) -D VERSION_REVISION=$(VERSION_REVISION)
 	else
 		# write V_tag major, v_tag_minor, rev and build
 		ifeq ($(IS_LIB),true)
-			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_NUMBER_REF=$(BUILD_NUMBER)
+			# todo add svn tag support!
+			DUMMY=1
 		else
-			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_NUMBER_REF=$(BUILD_NUMBER)
-		endif		
+			# todo add svn tag support!
+			DUMMY=1
+		endif
 	endif
 endif
 
@@ -203,6 +204,14 @@ else
 	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_MIN_REF=$(shell date '+%M')
 	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_SEC_REF=$(shell date '+%S')
 endif
+
+override CXXFLAGS := $(CXXFLAGS) -D BUILD_NUMBER=$(BUILD_NUMBER) \
+								 -D BUILD_DAY=$(shell date '+%d') \
+								 -D BUILD_MONTH=$(shell date '+%m') \
+								 -D BUILD_YEAR=$(shell date '+%y') \
+								 -D BUILD_HOUR=$(shell date '+%H') \
+								 -D BUILD_MIN=$(shell date '+%M') \
+								 -D BUILD_SEC=$(shell date '+%S')
 
 # Standard, non-optimized release build
 .PHONY: release
