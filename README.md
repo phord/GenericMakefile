@@ -57,6 +57,7 @@ Thus the BUILD_XXX flags will always be added.
   conditional compilation.
 * No working make clean all command.
 * Currently no full support for svn.
+* Only tested and adapted for Linux system and g++ and ar toolchain.
 
 # Thanks to mbcrawfo and his contributors:
 * My friend Jay and people on Stack Overflow for help with regex to parse the version info.
