@@ -51,6 +51,13 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     extern char libtest_BUILD_NUMBER_REF;
     std::cout << "Version: v" << (unsigned long) &libtest_BUILD_NUMBER_REF;
 
+#### How to use the different make flags
+	make clean
+	make clean debug
+	make clean reset debug
+	make clean reset debug release
+	...
+
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
 Thus the BUILD_XXX flags will always be added.
 
