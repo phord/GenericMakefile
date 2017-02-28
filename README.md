@@ -55,7 +55,7 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 	make clean
 	make clean debug
 	make clean reset debug
-	make clean reset debug release
+	make clean reset release
 	...
 
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
