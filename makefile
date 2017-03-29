@@ -189,20 +189,20 @@ endif
 # no matter what, always add BUILD_NUMBER and BUILD_DATE information.
 ifeq ($(IS_LIB), true)
 	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_NUMBER_REF=$(BUILD_NUMBER)
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_DAY_REF=$(shell date '+%d')
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_MONTH_REF=$(shell date '+%m')
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_YEAR_REF=$(shell date '+%y')
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_HOUR_REF=$(shell date '+%H')
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_MIN_REF=$(shell date '+%M')
-	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_SEC_REF=$(shell date '+%S')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_DAY_REF=$(shell date '+%-d')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_MONTH_REF=$(shell date '+%-m')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_YEAR_REF=$(shell date '+%-y')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_HOUR_REF=$(shell date '+%-H')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_MIN_REF=$(shell date '+%-M')
+	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_SEC_REF=$(shell date '+%-S')
 else
 	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_NUMBER_REF=$(BUILD_NUMBER)
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_DAY_REF=$(shell date '+%d')
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_MONTH_REF=$(shell date '+%m')
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_YEAR_REF=$(shell date '+%y')
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_HOUR_REF=$(shell date '+%H')
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_MIN_REF=$(shell date '+%M')
-	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_SEC_REF=$(shell date '+%S')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_DAY_REF=$(shell date '+%-d')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_MONTH_REF=$(shell date '+%-m')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_YEAR_REF=$(shell date '+%-y')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_HOUR_REF=$(shell date '+%-H')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_MIN_REF=$(shell date '+%-M')
+	BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_BUILD_SEC_REF=$(shell date '+%-S')
 endif
 
 override CXXFLAGS := $(CXXFLAGS) -D BUILD_NUMBER=$(BUILD_NUMBER) \
