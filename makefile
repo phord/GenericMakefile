@@ -206,12 +206,12 @@ else
 endif
 
 override CXXFLAGS := $(CXXFLAGS) -D BUILD_NUMBER=$(BUILD_NUMBER) \
-								 -D BUILD_DAY=$(shell date '+%d') \
-								 -D BUILD_MONTH=$(shell date '+%m') \
-								 -D BUILD_YEAR=$(shell date '+%y') \
-								 -D BUILD_HOUR=$(shell date '+%H') \
-								 -D BUILD_MIN=$(shell date '+%M') \
-								 -D BUILD_SEC=$(shell date '+%S')
+								 -D BUILD_DAY=$(shell date '+%-d') \
+								 -D BUILD_MONTH=$(shell date '+%-m') \
+								 -D BUILD_YEAR=$(shell date '+%-y') \
+								 -D BUILD_HOUR=$(shell date '+%-H') \
+								 -D BUILD_MIN=$(shell date '+%-M') \
+								 -D BUILD_SEC=$(shell date '+%-S')
 
 # Debug build for gdb debugging
 .PHONY: debug
