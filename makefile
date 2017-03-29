@@ -213,20 +213,6 @@ override CXXFLAGS := $(CXXFLAGS) -D BUILD_NUMBER=$(BUILD_NUMBER) \
 								 -D BUILD_MIN=$(shell date '+%M') \
 								 -D BUILD_SEC=$(shell date '+%S')
 
-# Standard, non-optimized release build
-.PHONY: release
-release: dirs
-ifeq ($(USE_VERSION), true)
-	@echo -e $(A_BOLD)"Beginning release build v$(VERSION_STRING) #$(BUILD_NUMBER)"$(A_NORMAL)
-else
-	@echo -e $(A_BOLD)"Beginning release build #$(BUILD_NUMBER)"$(A_NORMAL)
-endif
-	@$(START_TIME)
-	@$(MAKE) all --no-print-directory
-	@echo -en $(FG_B_GREEN)"\tTotal time: "
-	@$(END_TIME)
-	@echo -en $(FG_DEFAULT)
-
 # Debug build for gdb debugging
 .PHONY: debug
 debug: dirs
@@ -234,6 +220,20 @@ ifeq ($(USE_VERSION), true)
 	@echo -e $(A_BOLD)"Beginning debug build v$(VERSION_STRING) #$(BUILD_NUMBER)"$(A_NORMAL)
 else
 	@echo -e $(A_BOLD)"Beginning debug build #$(BUILD_NUMBER)"$(A_NORMAL)
+endif
+	@$(START_TIME)
+	@$(MAKE) all --no-print-directory
+	@echo -en $(FG_B_GREEN)"\tTotal time: "
+	@$(END_TIME)
+	@echo -en $(FG_DEFAULT)
+
+# Standard, non-optimized release build
+.PHONY: release
+release: dirs
+ifeq ($(USE_VERSION), true)
+	@echo -e $(A_BOLD)"Beginning release build v$(VERSION_STRING) #$(BUILD_NUMBER)"$(A_NORMAL)
+else
+	@echo -e $(A_BOLD)"Beginning release build #$(BUILD_NUMBER)"$(A_NORMAL)
 endif
 	@$(START_TIME)
 	@$(MAKE) all --no-print-directory
