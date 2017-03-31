@@ -10,16 +10,21 @@ easy project setup without the need to create tedious build rules or dependency 
 * Automatically generates dependecies as files are compiled, ensuring that files are correctly recompiled when dependecies have updated.
 * Includes configurations for normal (release) build and debug build suitable for GDB debugging (the debug is the standard build that is called with a 'make' command.)
 * Times the compilation of each file and the entire build.
-* Generates version numbers based on git or subversion tags (see below), which are passed the compiler as preprocessor macros or external references (see test directory).
+* Generates version numbers based on git or subversion tags (see below), which are passed the compiler as preprocessor macros.
+* Implements and includes a header file with a static PrintVersion function (see example in sources).
 * By default, builds in a "verbose" mode which allows you to see the full compiler commands being issued. By passing V=false to make, you can compile with only an output for the actions being performed.
 * Automatically added Build Date and Build Number Symbols which can be extracted from the generated lib or executable with the 'getVersion.sh' script included in this repository. Examples follow below.
+* Added stacked compilation support to enable a simple project build on multiple cores by make -f makefile.call [option]
+* Added IGNORE_SOURCE flag. With IGNORE_SOURCE="*old*" each file, that contains old will be ignored. 
 * Supported make flags are:
 	* clean - removes all compiled or generated data
 	* release - builds an optimized release build of the project
 	* debug - builds an gdb debuggable build of this project
+	* all - builds both, debug and release
 	* reset - resets build number
+	* help - shows this overview
 
-##Versioning:
+## Versioning:
 Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJOR, MINOR and PATCH are numeric. The following macros will be generated and passed to the preprocessor:
 * VERSION_MAJOR (int) - The major version number from the most recent tag.
 * VERSION_MINOR (int) - The minor version number from the most recent tag.
@@ -51,6 +56,19 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     extern char libtest_BUILD_NUMBER_REF;
     std::cout << "Version: v" << (unsigned long) &libtest_BUILD_NUMBER_REF;
 
+#### How to use the generated jversion.hpp header
+    # first of all you need to activate the option PRINTVERSION_HEADER := true in makefile.
+    ____________
+    // Source code
+    #include "jversion.hpp"
+     
+    void yourFunction() 
+    {
+        // Use the $(NAME) flag you defined in the makefile.
+        // First letter of NAME will be converted to CamelCase Syntax (thisIsYourName -> ThisIsYourName).
+        JVersion::Name::PrintVersion();
+    }
+
 #### How to use the different make flags
 	make clean
 	make clean debug
@@ -61,16 +79,13 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
 Thus the BUILD_XXX flags will always be added.
 
-#Limitations:
+# Limitations:
 * Assumes GNU make.
 * Doesn't really support multiple types of source files in the same project.
-* No easy way to exclude files from the build. You can either change the
-  extension of files to be excluded, or use preprocessor flags for
-  conditional compilation.
-* No working make clean all command.
 * Currently no full support for svn.
 * Only tested and adapted for Linux system and g++ and ar toolchain.
 
 # Thanks to mbcrawfo and his contributors:
 * My friend Jay and people on Stack Overflow for help with regex to parse the version info.
 * The residents of /r/programming for suggesting numerous tweaks and improvements.
+* For the support and help from Sebastian with this project and a lot of good improvement ideas.
