@@ -1,0 +1,20 @@
+MAKE=/usr/bin/make
+CORES=4
+
+# New debug build of library and test.
+newd: clean debug
+
+# New release build of library and test.
+newr: clean release
+
+# Build the debug binaries.
+debug:
+	$(MAKE) -j$(CORES) debug && $(MAKE) -j$(CORES) -C test debug
+
+# Build the release binaries.
+release:
+	$(MAKE) -j$(CORES) release && $(MAKE) -j$(CORES) -C test release
+
+# Clean the whole project - library and test.
+clean:
+	$(MAKE) clean && $(MAKE) -C test clean

@@ -9,6 +9,9 @@ export V := true
 # Version macros
 USE_GIT := false
 USE_SVN := false
+# enable #include "jversion.hpp" -> JVersion::$(NAME)::PrintVersion() support
+# First letter of $(NAME) will be forced to upper case (yourName -> YourName).
+PRINTVERSION_HEADER := true
 # The directory where the static library shall be created
 LIB_DIR = ./lib
 # Compiler used
@@ -16,9 +19,9 @@ CXX ?= g++
 # Extension of source files used in the project
 SRC_EXT = cpp
 # Path to the source directory, relative to the makefile
-SRC_PATH                = ./src
+SRC_PATH = ./src
 # Add here sources which should be ignored for compiling
-IGNORE_SOURCE           = 'EC145_*'
+IGNORE_SOURCE  = ""
 # Space-separated pkg-config libraries used by this project
 LIBS =
 # General compiler flags
@@ -27,8 +30,10 @@ COMPILE_FLAGS = -std=c++0x -Wall -Wextra
 RCOMPILE_FLAGS = -O3 -D NDEBUG
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -O0 -g3 -D DEBUG
+# Default include directory. Used for installing a library or the printversion header.
+DEFAULT_INCLUDE_DIR = ./inc
 # Add additional include paths
-INCLUDES = -I./inc
+INCLUDES = -I$(DEFAULT_INCLUDE_DIR)
 # General linker settings
 LINK_FLAGS =
 # Additional release-specific linker settings
@@ -117,6 +122,7 @@ endif
 # Set the object file names, with the source directory stripped
 # from the path, and the build path prepended in its place
 OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
+
 # Set the dependency files that will be used to add header dependencies
 DEPS = $(OBJECTS:.o=.d)
 
@@ -223,6 +229,8 @@ ifeq ($(USE_VERSION), true)
 else
 	@echo -e $(A_BOLD)"Beginning debug build #$(BUILD_NUMBER)"$(A_NORMAL)
 endif
+	@echo $(SOURCES)
+	@echo $(OBJECTS)
 	@$(START_TIME)
 	@$(MAKE) target --no-print-directory
 	@echo -en $(FG_B_GREEN)"\tTotal time: "
@@ -250,7 +258,7 @@ all:
 
 # Create the directories used in the build
 .PHONY: dirs
-dirs:
+dirs: printversion
 	@echo -en $(A_BOLD)"Creating directories"$(A_NORMAL)
 	@mkdir -p $(dir $(OBJECTS))
 	@mkdir -p $(TARGET_PATH)
@@ -263,7 +271,7 @@ install:
 	@echo -e $(FG_B_CYAN)"Installing to $(INSTALL_DIR)/$(TARGET_NAME)"$(FG_DEFAULT)
 	@$(INSTALL_PROGRAM) $(TARGET_PATH)/$(TARGET_NAME) $(INSTALL_DIR)
 	@echo -e $(FG_B_CYAN)"Installing header to $(HEADER_DIR)/$(NAME)"$(FG_DEFAULT)
-	@$(INSTALL_PROGRAM) inc/$(NAME).hpp $(HEADER_DIR)
+	@$(INSTALL_PROGRAM) $(DEFAULT_INCLUDE_DIR)/$(NAME).hpp $(HEADER_DIR)
 	@echo "Done."
 
 # Uninstalls the program
@@ -283,18 +291,32 @@ clean:
 	@$(RM) -rv build
 	@$(RM) -rv bin
 	@$(RM) -rv lib
+ifeq ($(PRINTVERSION_HEADER), true)
+	@rm -vf $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@rmdir --ignore-fail-on-non-empty inc
+endif
 	@echo -en $(FG_DEFAULT)
 
-# Main rule, checks the executable and symlinks to the output
+# Main rule, checks the executable and symlinks to the output.
 target: $(TARGET_PATH)/$(TARGET_NAME)
 	@echo -e "Making symlink:"$(FG_B_CYAN) "$(TARGET_NAME) -> $<"$(FG_DEFAULT)
 	@$(RM) $(TARGET_NAME)
 	@ln -s $(TARGET_PATH)/$(TARGET_NAME)
 
-#removes the build number file .version
+# Removes the build number file .version.
 reset:
 	@echo -e $(FG_B_RED)Removing the version information. Next build will be "#1."$(FG_DEFAULT)
 	@$(RM) -v .version
+
+# Displays an overview of the supported functions implemented in this makefile.
+help:
+	@echo Supported make flags are:
+	@echo "  "clean "  "- removes all compiled or generated data
+	@echo "  "release - builds an optimized release build of the project
+	@echo "  "debug "  "- builds an gdb debuggable build of this project
+	@echo "  "all "    "- builds both, debug and release
+	@echo "  "reset "  "- resets build number
+	@echo "  "help "   "- shows this overview
 
 # Link the executable
 $(TARGET_PATH)/$(TARGET_NAME): $(OBJECTS)
@@ -366,3 +388,36 @@ BG_B_BLUE    = "\e104m"
 BG_B_MAGENTA = "\e105m"
 BG_B_CYAN    = "\e106m"
 BG_B_WHITE   = "\e107m"
+
+HEADER_EXISTS := $(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; else echo false; fi)
+printversion:
+ifeq ($(PRINTVERSION_HEADER), true)
+	@if [ ! -d inc ]; then mkdir -p inc; fi
+ifeq ($(HEADER_EXISTS), false)
+	@echo "#pragma once" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "#include <cstdio>" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "namespace JVersion" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "{" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    class "$(shell echo $(NAME) | sed 's/.*/\u&/') >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    {" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    public:" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "        static void PrintVersion()" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "        {" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""Version information of $(TARGET_NAME)\n"\"");" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #ifdef BUILD_YEAR" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""  Build Date: %02d.%02d.20%d - %02d:%02d:%02d\n"\""," >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "                        BUILD_DAY, BUILD_MONTH, BUILD_YEAR," >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "                        BUILD_HOUR, BUILD_MIN, BUILD_SEC);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #ifdef VERSION_MAJOR" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""  Build Version: v%d.%d.%d\n"\"", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #ifdef BUILD_NUMBER" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""  Build: %d\n"\"", BUILD_NUMBER);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "        }" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    };" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "}" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+endif
+endif
