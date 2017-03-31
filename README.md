@@ -62,7 +62,7 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     void yourFunction() 
     {
         // Use the $(NAME) flag you defined in the makefile.
-	// First letter of NAME will be converted to CamelCase Syntax (thisIsYourName -> ThisIsYourName).
+        // First letter of NAME will be converted to CamelCase Syntax (thisIsYourName -> ThisIsYourName).
         JVersion::Name::PrintVersion();
     }
 
@@ -76,7 +76,7 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
 Thus the BUILD_XXX flags will always be added.
 
-#Limitations:
+# Limitations:
 * Assumes GNU make.
 * Doesn't really support multiple types of source files in the same project.
 * Currently no full support for svn.
