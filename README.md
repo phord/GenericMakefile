@@ -24,7 +24,7 @@ easy project setup without the need to create tedious build rules or dependency 
 	* reset - resets build number
 	* help - shows this overview
 
-##Versioning:
+## Versioning:
 Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJOR, MINOR and PATCH are numeric. The following macros will be generated and passed to the preprocessor:
 * VERSION_MAJOR (int) - The major version number from the most recent tag.
 * VERSION_MINOR (int) - The minor version number from the most recent tag.
