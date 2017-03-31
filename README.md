@@ -62,7 +62,8 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     void yourFunction() 
     {
         // Use the $(NAME) flag you defined in the makefile.
-        JVersion::NAME::PrintVersion();
+	// First letter of NAME will be converted to CamelCase Syntax (thisIsYourName -> ThisIsYourName).
+        JVersion::Name::PrintVersion();
     }
 
 #### How to use the different make flags
