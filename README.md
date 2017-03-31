@@ -61,7 +61,7 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
      
     void yourFunction() 
     {
-    	// Use the $(NAME) flag you defined in the makefile.
+        // Use the $(NAME) flag you defined in the makefile.
         JVersion::NAME::PrintVersion();
     }
 
