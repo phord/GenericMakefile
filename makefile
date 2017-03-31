@@ -1,4 +1,4 @@
-#### PROJECT SETTINGS ####
+##### PROJECT SETTINGS ###############################################################################################################################
 # The name of the executable to be created
 # The libXXX.a extention will be added. Only XXX has to be specified.
 NAME = test
@@ -16,7 +16,9 @@ CXX ?= g++
 # Extension of source files used in the project
 SRC_EXT = cpp
 # Path to the source directory, relative to the makefile
-SRC_PATH = ./src
+SRC_PATH                = ./src
+# Add here sources which should be ignored for compiling
+IGNORE_SOURCE           = 'EC145_*'
 # Space-separated pkg-config libraries used by this project
 LIBS =
 # General compiler flags
@@ -57,7 +59,7 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-# Append pkg-config specific libraries if need be
+# Append pkg-config specific libraries if needed
 ifneq ($(LIBS),)
 	COMPILE_FLAGS += $(shell pkg-config --cflags $(LIBS))
 	LINK_FLAGS += $(shell pkg-config --libs $(LIBS))
@@ -222,7 +224,7 @@ else
 	@echo -e $(A_BOLD)"Beginning debug build #$(BUILD_NUMBER)"$(A_NORMAL)
 endif
 	@$(START_TIME)
-	@$(MAKE) all --no-print-directory
+	@$(MAKE) target --no-print-directory
 	@echo -en $(FG_B_GREEN)"\tTotal time: "
 	@$(END_TIME)
 	@echo -en $(FG_DEFAULT)
@@ -236,10 +238,15 @@ else
 	@echo -e $(A_BOLD)"Beginning release build #$(BUILD_NUMBER)"$(A_NORMAL)
 endif
 	@$(START_TIME)
-	@$(MAKE) all --no-print-directory
+	@$(MAKE) target --no-print-directory
 	@echo -en $(FG_B_GREEN)"\tTotal time: "
 	@$(END_TIME)
 	@echo -en $(FG_DEFAULT)
+
+# Make both targets debug and release.
+all:
+	$(MAKE) debug --no-print-directory
+	$(MAKE) release --no-print-directory
 
 # Create the directories used in the build
 .PHONY: dirs
@@ -279,13 +286,15 @@ clean:
 	@echo -en $(FG_DEFAULT)
 
 # Main rule, checks the executable and symlinks to the output
-all: $(TARGET_PATH)/$(TARGET_NAME)
+target: $(TARGET_PATH)/$(TARGET_NAME)
 	@echo -e "Making symlink:"$(FG_B_CYAN) "$(TARGET_NAME) -> $<"$(FG_DEFAULT)
 	@$(RM) $(TARGET_NAME)
 	@ln -s $(TARGET_PATH)/$(TARGET_NAME)
 
+#removes the build number file .version
 reset:
-	@$(RM) .version
+	@echo -e $(FG_B_RED)Removing the version information. Next build will be "#1."$(FG_DEFAULT)
+	@$(RM) -v .version
 
 # Link the executable
 $(TARGET_PATH)/$(TARGET_NAME): $(OBJECTS)
