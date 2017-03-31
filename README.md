@@ -57,6 +57,9 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     std::cout << "Version: v" << (unsigned long) &libtest_BUILD_NUMBER_REF;
 
 #### How to use the generated jversion.hpp header
+    # first of all you need to activate the option PRINTVERSION_HEADER := true in makefile.
+    ____________
+    // Source code
     #include "jversion.hpp"
      
     void yourFunction() 
