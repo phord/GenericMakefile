@@ -293,7 +293,7 @@ clean:
 	@$(RM) -rv lib
 ifeq ($(PRINTVERSION_HEADER), true)
 	@rm -vf $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@rmdir --ignore-fail-on-non-empty inc
+	@[ ! -d $(DEFAULT_INCLUDE_DIR) ] || rmdir --ignore-fail-on-non-empty $(DEFAULT_INCLUDE_DIR);
 endif
 	@echo -en $(FG_DEFAULT)
 
@@ -392,7 +392,7 @@ BG_B_WHITE   = "\e107m"
 HEADER_EXISTS := $(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; else echo false; fi)
 printversion:
 ifeq ($(PRINTVERSION_HEADER), true)
-	@if [ ! -d inc ]; then mkdir -p inc; fi
+	@if [ ! -d $(DEFAULT_INCLUDE_DIR) ]; then mkdir -p $(DEFAULT_INCLUDE_DIR); fi
 ifeq ($(HEADER_EXISTS), false)
 	@echo "#pragma once" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "#include <cstdio>" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp

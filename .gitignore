@@ -3,3 +3,5 @@ build
 lib
 .version
 *.a
+jversion.hpp
+testExecutable
