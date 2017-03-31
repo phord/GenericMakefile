@@ -85,3 +85,4 @@ Thus the BUILD_XXX flags will always be added.
 # Thanks to mbcrawfo and his contributors:
 * My friend Jay and people on Stack Overflow for help with regex to parse the version info.
 * The residents of /r/programming for suggesting numerous tweaks and improvements.
+* For the support and help from Sebastian with this project and a lot of good improvement ideas.
