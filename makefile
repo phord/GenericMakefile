@@ -1,16 +1,18 @@
-##### PROJECT SETTINGS ###############################################################################################################################
+##### PROJECT SETTINGS ######
 # The name of the executable to be created
 # The libXXX.a extention will be added. Only XXX has to be specified.
-NAME = test
+# For executables a lowercase Camelcase style eg. testExecutable is recomended.
+# For libraries a uppercase Camelcase style eg. JTimer is recomended.
+# The produced library will be lowercase only per Convention.
+NAME = Test
 # Link to library option. True = outputs a library false will produce an executable.
 export IS_LIB := true
 # Verbose option, to output compile and link commands. true = verbose output, flase = quiet.
 export V := true
 # Version macros
-USE_GIT := false
+USE_GIT := true
 USE_SVN := false
 # enable #include "jversion.hpp" -> JVersion::$(NAME)::PrintVersion() support
-# First letter of $(NAME) will be forced to upper case (yourName -> YourName).
 PRINTVERSION_HEADER := true
 # The directory where the static library shall be created
 LIB_DIR = ./lib
@@ -73,7 +75,7 @@ endif
 #	ADD_BUILD_INFO_COMMAND= ld --defsym	VERSION_PATCH_REF=$(VERSION_PATCH) -o $(word 1, $(OBJECTS)2) $(word 1, $(OBJECTS)) -lc
 # checks if target is binary or library and sets paths and commands accordingly
 ifeq ($(IS_LIB),true)
-	TARGET_NAME := lib$(NAME).a
+	TARGET_NAME := lib$(shell echo $(NAME)|tr [:upper:] [:lower:]).a
 	TARGET=lib
 	LINK_COMMAND = cp $(word 1, $(OBJECTS)) $(word 1, $(OBJECTS:.o=tmp.o));\
 				   mv $(word 1, $(OBJECTS)) $(word 1, $(OBJECTS:.o=orig.o));\
@@ -229,8 +231,6 @@ ifeq ($(USE_VERSION), true)
 else
 	@echo -e $(A_BOLD)"Beginning debug build #$(BUILD_NUMBER)"$(A_NORMAL)
 endif
-	@echo $(SOURCES)
-	@echo $(OBJECTS)
 	@$(START_TIME)
 	@$(MAKE) target --no-print-directory
 	@echo -en $(FG_B_GREEN)"\tTotal time: "
@@ -268,10 +268,11 @@ dirs: printversion
 # Installs to the set path
 .PHONY: install
 install:
+	mkdir -p $(HEADER_DIR)
 	@echo -e $(FG_B_CYAN)"Installing to $(INSTALL_DIR)/$(TARGET_NAME)"$(FG_DEFAULT)
 	@$(INSTALL_PROGRAM) $(TARGET_PATH)/$(TARGET_NAME) $(INSTALL_DIR)
-	@echo -e $(FG_B_CYAN)"Installing header to $(HEADER_DIR)/$(NAME)"$(FG_DEFAULT)
-	@$(INSTALL_PROGRAM) $(DEFAULT_INCLUDE_DIR)/$(NAME).hpp $(HEADER_DIR)
+	@echo -e $(FG_B_CYAN)"Installing header to $(HEADER_DIR)/$(shell echo $(NAME)|tr [:upper:] [:lower:])"$(FG_DEFAULT)
+	@$(INSTALL_PROGRAM) $(DEFAULT_INCLUDE_DIR)/$(shell echo $(NAME)|tr [:upper:] [:lower:]).hpp $(HEADER_DIR)/
 	@echo "Done."
 
 # Uninstalls the program
@@ -399,7 +400,7 @@ ifeq ($(HEADER_EXISTS), false)
 	@echo "" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "namespace JVersion" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "{" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@echo "    class "$(shell echo $(NAME) | sed 's/.*/\u&/') >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    class "$(NAME) >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    {" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    public:" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "        static void PrintVersion()" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
