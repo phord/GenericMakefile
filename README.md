@@ -65,7 +65,6 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     void yourFunction() 
     {
         // Use the $(NAME) flag you defined in the makefile.
-        // First letter of NAME will be converted to CamelCase Syntax (thisIsYourName -> ThisIsYourName).
         JVersion::Name::PrintVersion();
     }
 
@@ -74,6 +73,9 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 	make clean debug
 	make clean reset debug
 	make clean reset release
+    make clean reset all
+    make install
+    make uninstall
 	...
 
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
