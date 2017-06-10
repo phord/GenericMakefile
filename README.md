@@ -14,8 +14,11 @@ easy project setup without the need to create tedious build rules or dependency 
 * Implements and includes a header file with a static PrintVersion function (see example in sources).
 * By default, builds in a "verbose" mode which allows you to see the full compiler commands being issued. By passing V=false to make, you can compile with only an output for the actions being performed.
 * Automatically added Build Date and Build Number Symbols which can be extracted from the generated lib or executable with the 'getVersion.sh' script included in this repository. Examples follow below.
-* Added stacked compilation support to enable a simple project build on multiple cores by make -f makefile.call [option]
-* Added IGNORE_SOURCE flag. With IGNORE_SOURCE="*old*" each file, that contains old will be ignored. 
+* Added stacked compilation support to enable a simple project build on multiple cores by make -f all [option]. There are multiple options available like clean, newd (= new debug) and newr (= new release).
+* Makefile now supports out of the box executables, static (.a) and shared (.so) libraries. All you need to change is the TYPE flag to one of the specified NAMES (TARGET_EXECUTABLE, TARGET_STATIC_LIB or TARGET_SHARED_LIB).
+* Added IGNORE_SOURCE flag. With IGNORE_SOURCE="*old*" each file, that contains old will be ignored.
+* SYMBOLIC_LINK_DIR is now optional. Just specify a directory for a symlink to be build in. If nothing is specified, no symlink will be created. Make sure to also specify the LIB_SYMLINK_DELTA flag, which has to contain the path from the SYMBOLIC_LINK_DIR to the project root (otherwise the created links won't work).
+* The DIST_INFO Variable can now be used e.g. for the SYMBOLIC_LINK_DIR. It contains information about the distribution and the current OS-Type (32 or 64 bit).
 * Supported make flags are:
 	* clean - removes all compiled or generated data
 	* release - builds an optimized release build of the project
@@ -46,12 +49,12 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     ./getVersion.sh libtest.a
     # lists only the version information of libtest.a itself.
     ./getVersion.sh libtest.a libtest.a
-    
+
 #### How to use the linked references in code
     # Find all references:
     # The file extention .a of static libraries is removed in the reference symbols.
     objdump -t libtest.a | grep REF
-    
+
     # For usage of the additional linked REF symboles see test/src/main.cpp
     extern char libtest_BUILD_NUMBER_REF;
     std::cout << "Version: v" << (unsigned long) &libtest_BUILD_NUMBER_REF;
@@ -61,8 +64,8 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
     ____________
     // Source code
     #include "jversion.hpp"
-     
-    void yourFunction() 
+
+    void yourFunction()
     {
         // Use the $(NAME) flag you defined in the makefile.
         JVersion::Name::PrintVersion();
@@ -79,7 +82,6 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 	...
 
 If the makefile is not used in a git repository, or is in a repository with no tags, the version macros are not created.
-Thus the BUILD_XXX flags will always be added.
 
 # Limitations:
 * Assumes GNU make.

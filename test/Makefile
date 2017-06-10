@@ -1,55 +1,75 @@
+########################################################################################
 ##### PROJECT SETTINGS ######
 # The name of the executable to be created
 # The libXXX.a extention will be added. Only XXX has to be specified.
 # For executables a lowercase Camelcase style eg. testExecutable is recomended.
 # For libraries a uppercase Camelcase style eg. JTimer is recomended.
-# The produced library will be lowercase only per Convention.
-NAME = Test
-# Link to library option. True = outputs a library false will produce an executable.
-export IS_LIB := true
+# The produced library will be lowercase only per convention.
+NAME = testExecutable
+# Link to library option.
+## 0 = target is an executable.
+TARGET_EXECUTABLE = 0
+## 1 = target is a static library.
+TARGET_STATIC_LIB = 1
+## 2 = target is a shared library.
+TARGET_SHARED_LIB = 2
+export TYPE := $(TARGET_EXECUTABLE)
 # Verbose option, to output compile and link commands. true = verbose output, flase = quiet.
 export V := true
 # Version macros
 USE_GIT := true
 USE_SVN := false
-# enable #include "jversion.hpp" -> JVersion::$(NAME)::PrintVersion() support
+# enable #include "jversion.hpp" -> JVersion::$(NAME)::PrintVersion() support.
 PRINTVERSION_HEADER := true
-# The directory where the static library shall be created
+# The directory where the executable shall be created.
+EXE_DIR = ./bin
+# The directory where the static or shared library will be created.
 LIB_DIR = ./lib
+# The directory where a symbolic link to the latest target will be created.
+# If no SYMBOLIC_LINK_DIR is specified no symbolic link is created.
+# Always make shure to use the path with an appended '/'
+SYMBOLIC_LINK_DIR = ./
+# Use this variable in combination with the SYMBOLIK_LINK_DIR.
+# The delta variable specifies the relative path from the SYMBOLIC_LINK_DIR to the project root.
+# Always make shure to use the path with an appended '/'
+LIB_SYMLINK_DELTA =
 # Compiler used
 CXX ?= g++
-# Extension of source files used in the project
+# Extension of source files used in the project.
 SRC_EXT = cpp
-# Path to the source directory, relative to the makefile
+# Path to the source directory, relative to the makefile.
 SRC_PATH = ./src
-# Add here sources which should be ignored for compiling
+# Add here sources which should be ignored for compiling.
 IGNORE_SOURCE  = ""
-# Space-separated pkg-config libraries used by this project
+# Space-separated pkg-config libraries used by this project.
 LIBS =
 # General compiler flags
 COMPILE_FLAGS = -std=c++0x -Wall -Wextra
-# Additional release-specific flags
+# Additional release-specific flags.
 RCOMPILE_FLAGS = -O3 -D NDEBUG
-# Additional debug-specific flags
+# Additional debug-specific flags.
 DCOMPILE_FLAGS = -O0 -g3 -D DEBUG
 # Default include directory. Used for installing a library or the printversion header.
 DEFAULT_INCLUDE_DIR = ./inc
-# Add additional include paths
-INCLUDES = -I$(DEFAULT_INCLUDE_DIR)
-# General linker settings
-LINK_FLAGS =
-# Additional release-specific linker settings
+# External include directory. Used for conventions or generally applicable headers.
+EXTERNAL_INCLUDE_DIR =
+# Add additional include paths.
+INCLUDES = -I$(DEFAULT_INCLUDE_DIR) -I../inc -I$(EXTERNAL_INCLUDE_DIR)
+# General linker settings.
+LINK_FLAGS = -L../lib/$(DIST_INFO) -ltest
+# Additional release-specific linker settings.
 RLINK_FLAGS =
-# Additional debug-specific linker settings
+# Additional debug-specific linker settings.
 DLINK_FLAGS =
-# Install path (bin/ is appended automatically)
+# Install path (bin/ or lib/ is appended automatically).
 INSTALL_DIR = /usr/$(TARGET)
 HEADER_DIR = /usr/include/tools
 #### END PROJECT SETTINGS ####
+########################################################################################
+# Generally you should not need to edit anything below this line!
 
-# Generally should not need to edit below this line
-# Obtains the OS type 'Linux'
-UNAME_S:=$(shell uname -s)
+#                  get all dist info              extract dist name                      replace spaces with hyphens   add if OS is 32 or 64 bit
+DIST_INFO:=$(shell cat /etc/*-release | sed -nre 's/DISTRIB_DESCRIPTION=\"(.*)\"/\1/p' | sed -nre 's/ /-/p' | sed -nre 's/(.*)/\1_`uname -m`/p')
 
 # Function used to check variables. Use on the command line:
 # make print-VARNAME
@@ -59,6 +79,7 @@ print-%: ; @echo $*=$($*)
 # Shell used in this makefile
 # bash is used for 'echo -en'
 SHELL = /bin/bash
+
 # Clear built-in rules
 .SUFFIXES:
 # Programs for installation
@@ -72,22 +93,34 @@ ifneq ($(LIBS),)
 	LINK_FLAGS += $(shell pkg-config --libs $(LIBS))
 endif
 
+# Use -fPIC flag for library types.
+ifneq ($(TYPE), $(TARGET_EXECUTABLE))
+	COMPILE_FLAGS += -fPIC
+endif
+
 #	ADD_BUILD_INFO_COMMAND= ld --defsym	VERSION_PATCH_REF=$(VERSION_PATCH) -o $(word 1, $(OBJECTS)2) $(word 1, $(OBJECTS)) -lc
 # checks if target is binary or library and sets paths and commands accordingly
-ifeq ($(IS_LIB),true)
+ifeq ($(TYPE), $(TARGET_EXECUTABLE))
+	# ${TARGET_EXECUTABLE}
+	TARGET=$(EXE_DIR)
+	TARGET_NAME := $(NAME)
+	LINK_COMMAND = $(CMD_PREFIX)$(CXX) $(BUILD_NUMBER_LDFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
+else ifeq ($(TYPE), $(TARGET_STATIC_LIB))
+	# ${TARGET_STATIC_LIB}
+	TARGET=$(LIB_DIR)
 	TARGET_NAME := lib$(shell echo $(NAME)|tr [:upper:] [:lower:]).a
-	TARGET=lib
 	LINK_COMMAND = cp $(word 1, $(OBJECTS)) $(word 1, $(OBJECTS:.o=tmp.o));\
 				   mv $(word 1, $(OBJECTS)) $(word 1, $(OBJECTS:.o=orig.o));\
-			       ld -r $(BUILD_NUMBER_LDFLAGS)\
+				   ld -r $(BUILD_NUMBER_LDFLAGS) $(LDFLAGS)\
 				   $(word 1, $(OBJECTS:.o=tmp.o)) -o $(word 1, $(OBJECTS));\
 				   rm $(word 1, $(OBJECTS:.o=tmp.o));\
 				   ar -rs $(TARGET_PATH)/$(TARGET_NAME) $(OBJECTS);\
 				   mv $(word 1, $(OBJECTS:.o=orig.o)) $(word 1, $(OBJECTS))
 else
-	TARGET_NAME := $(NAME)
-	TARGET=bin
-	LINK_COMMAND = $(CMD_PREFIX)$(CXX) $(BUILD_NUMBER_LDFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
+	# ${TARGET_SHARED_LIB}
+	TARGET=$(LIB_DIR)
+	TARGET_NAME := lib$(shell echo $(NAME)|tr [:upper:] [:lower:]).so
+	LINK_COMMAND = $(CMD_PREFIX)$(CXX) -shared $(BUILD_NUMBER_LDFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
 endif
 
 # Set verbose flag.
@@ -154,7 +187,7 @@ ifeq ($(USE_GIT), true)
 		VERSION_HASH     := $(word 5, $(VERSION))
 		VERSION_STRING   := "$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH).$(VERSION_REVISION)-$(VERSION_HASH)"
 
-		ifeq ($(IS_LIB),true)
+		ifeq ($(TYPE), $(TARGET_STATIC_LIB))
 			BUILD_NUMBER_LDFLAGS  = --defsym $(TARGET_NAME:.a=)_VERSION_MAJOR_REF=$(VERSION_MAJOR)
 			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_MINOR_REF=$(VERSION_MINOR)
 			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_PATCH_REF=$(VERSION_PATCH)
@@ -178,7 +211,7 @@ else ifeq ($(USE_SVN), true)
 	ifeq ($(IS_TRUNK), true)
 		# write REVISION information.
 		VERSION_REVISION := $(shell svn info | sed -nr 's/Revision:[ \t]([0-9]*)/\1/p')
-		ifeq ($(IS_LIB),true)
+		ifeq ($(TYPE), $(TARGET_STATIC_LIB))
 			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_REVISION_REF=$(VERSION_REVISION)
 		else
 			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_REVISION_REF=$(VERSION_REVISION)
@@ -186,7 +219,7 @@ else ifeq ($(USE_SVN), true)
 		override CXXFLAGS := $(CXXFLAGS) -D VERSION_REVISION=$(VERSION_REVISION)
 	else
 		# write V_tag major, v_tag_minor, rev and build
-		ifeq ($(IS_LIB),true)
+		ifeq ($(TYPE), $(TARGET_STATIC_LIB))
 			# todo add svn tag support!
 			DUMMY=1
 		else
@@ -197,7 +230,7 @@ else ifeq ($(USE_SVN), true)
 endif
 
 # no matter what, always add BUILD_NUMBER and BUILD_DATE information.
-ifeq ($(IS_LIB), true)
+ifeq ($(TYPE), $(TARGET_STATIC_LIB))
 	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_NUMBER_REF=$(BUILD_NUMBER)
 	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_DAY_REF=$(shell date '+%-d')
 	BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_BUILD_MONTH_REF=$(shell date '+%-m')
@@ -283,26 +316,38 @@ uninstall:
 	@echo -e $(FG_B_RED)"Removing $(HEADER_DIR)/$(NAME)"$(FG_DEFAULT)
 	@$(RM) $(HEADER_DIR)/$(NAME).hpp
 
+
+ARGC=$(words $(MAKECMDGOALS))
 # Removes all build files
 .PHONY: clean
 clean:
 	@echo -e $(FG_B_RED)"Deleting $(TARGET_NAME) symlink"
-	@$(RM) $(TARGET_NAME)
+	@$(RM) $(SYMBOLIC_LINK_DIR)/$(TARGET_NAME)
+	@echo -e "Remove $(SYMBOLIC_LINK_DIR) if empty"
+	@rmdir -p --ignore-fail-on-non-empty $(SYMBOLIC_LINK_DIR) 2> /dev/null || true;
 	@echo "Deleting directories"
 	@$(RM) -rv build
-	@$(RM) -rv bin
-	@$(RM) -rv lib
-ifeq ($(PRINTVERSION_HEADER), true)
+	@$(RM) -rv $(EXE_DIR)
+	@$(RM) -rv $(LIB_DIR)
 	@rm -vf $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@[ ! -d $(DEFAULT_INCLUDE_DIR) ] || rmdir --ignore-fail-on-non-empty $(DEFAULT_INCLUDE_DIR);
-endif
+	@echo -e "Remove $(DEFAULT_INCLUDE_DIR) if empty"
+	@rmdir -p --ignore-fail-on-non-empty $(DEFAULT_INCLUDE_DIR) 2> /dev/null || true;
 	@echo -en $(FG_DEFAULT)
+# If there is a second argument specified, make sure to generate the version header.
+ifeq ($(ARGC), 2)
+	@$(MAKE) printversion --no-print-directory
+endif
 
 # Main rule, checks the executable and symlinks to the output.
 target: $(TARGET_PATH)/$(TARGET_NAME)
-	@echo -e "Making symlink:"$(FG_B_CYAN) "$(TARGET_NAME) -> $<"$(FG_DEFAULT)
-	@$(RM) $(TARGET_NAME)
-	@ln -s $(TARGET_PATH)/$(TARGET_NAME)
+ifneq ($(SYMBOLIC_LINK_DIR), )
+	@echo -e "Creating symlink:"$(FG_B_CYAN) "$(SYMBOLIC_LINK_DIR)$(TARGET_NAME) -> $<"$(FG_DEFAULT)
+	@$(RM) -f $(SYMBOLIC_LINK_DIR)/$(TARGET_NAME)
+	@if [ ! -d $(SYMBOLIC_LINK_DIR) ]; then mkdir -p $(SYMBOLIC_LINK_DIR); fi
+	@ln -s $(LIB_SYMLINK_DELTA)$(TARGET_PATH)/$(TARGET_NAME) $(shell echo $(SYMBOLIC_LINK_DIR))$(TARGET_NAME)
+else
+	@echo -e "Creating no symlink:"$(FG_B_CYAN) "SYMBOLIC_LINK_DIR is undefined "$(FG_DEFAULT)
+endif
 
 # Removes the build number file .version.
 reset:
@@ -390,17 +435,17 @@ BG_B_MAGENTA = "\e105m"
 BG_B_CYAN    = "\e106m"
 BG_B_WHITE   = "\e107m"
 
-HEADER_EXISTS := $(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; else echo false; fi)
 printversion:
 ifeq ($(PRINTVERSION_HEADER), true)
 	@if [ ! -d $(DEFAULT_INCLUDE_DIR) ]; then mkdir -p $(DEFAULT_INCLUDE_DIR); fi
-ifeq ($(HEADER_EXISTS), false)
-	@echo "#pragma once" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+ifeq ($(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; else echo false; fi), false)
+	@echo -en $(A_BOLD)"Creating version header"$(A_NORMAL)
+	@echo "#pragma once" > $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "#include <cstdio>" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "namespace JVersion" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "{" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@echo "    class "$(NAME) >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "    class $(shell echo $(NAME) | sed -nre 's/(.).*/\U\1/p')$(shell echo $(NAME) | sed -nre 's/.(.*)/\1/p')" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    {" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    public:" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "        static void PrintVersion()" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
@@ -420,5 +465,6 @@ ifeq ($(HEADER_EXISTS), false)
 	@echo "        }" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    };" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "}" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo " -" done
 endif
 endif
