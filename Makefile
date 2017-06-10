@@ -452,7 +452,7 @@ ifeq ($(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; e
 	@echo "        {" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            std::printf("\""Version information of $(TARGET_NAME)\n"\"");" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            #ifdef BUILD_YEAR" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@echo "            std::printf("\""  Build Date: %02d.%02d.20%d - %02d:%02d:%02d\n"\""," >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""  Build Date:    %02d.%02d.20%d - %02d:%02d:%02d\n"\""," >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "                        BUILD_DAY, BUILD_MONTH, BUILD_YEAR," >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "                        BUILD_HOUR, BUILD_MIN, BUILD_SEC);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
@@ -460,7 +460,7 @@ ifeq ($(shell if [ -a "$(DEFAULT_INCLUDE_DIR)/jversion.hpp" ]; then echo true; e
 	@echo "            std::printf("\""  Build Version: v%d.%d.%d\n"\"", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            #ifdef BUILD_NUMBER" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
-	@echo "            std::printf("\""  Build: %d\n"\"", BUILD_NUMBER);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
+	@echo "            std::printf("\""  Build:         %d\n"\"", BUILD_NUMBER);" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "            #endif" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "        }" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp
 	@echo "    };" >> $(DEFAULT_INCLUDE_DIR)/jversion.hpp

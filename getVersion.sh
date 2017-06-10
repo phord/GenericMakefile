@@ -64,27 +64,27 @@ do
 	TMP=$(cat /tmp/getVersion.txt | sed -nr "s/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}"$ARG"_VERSION_MAJOR_REF/\1/p")
 	if [[ $TMP ]]
 	then
-		printf "  vMajor: %d\n" 0x$TMP
+		printf "  vMajor:   %4d\n" 0x$TMP
 	fi
 	TMP=$(cat /tmp/getVersion.txt | sed -nr "s/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}"$ARG"_VERSION_MINOR_REF/\1/p")
 	if [[ $TMP ]]
 	then
-		printf "  vMinor: %d\n" 0x$TMP
+		printf "  vMinor:   %4d\n" 0x$TMP
 	fi
 	TMP=$(cat /tmp/getVersion.txt | sed -nr "s/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}"$ARG"_VERSION_PATCH_REF/\1/p")
 	if [[ $TMP ]]
 	then
-		printf "  vPatch: %d\n" 0x$TMP
+		printf "  vPatch:   %4d\n" 0x$TMP
 	fi
 	TMP=$(cat /tmp/getVersion.txt | sed -nr "s/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}"$ARG"_VERSION_REVISION_REF/\1/p")
 	if [[ $TMP ]]
 	then
-		printf "  Revision: %d\n" 0x$TMP
+		printf "  Revision: %4d\n" 0x$TMP
 	fi
 	TMP=$(cat /tmp/getVersion.txt | sed -nr "s/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}"$ARG"_BUILD_NUMBER_REF/\1/p")
 	if [[ $TMP ]]
 	then
-		printf "  Build: %d\n" 0x$TMP
+		printf "  Build:    %4d\n" 0x$TMP
 	fi
 done
 
