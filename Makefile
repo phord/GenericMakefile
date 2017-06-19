@@ -13,7 +13,7 @@ TARGET_EXECUTABLE = 0
 TARGET_STATIC_LIB = 1
 ## 2 = target is a shared library.
 TARGET_SHARED_LIB = 2
-export TYPE := $(TARGET_STATIC_LIB)
+export TYPE := $(TARGET_SHARED_LIB)
 # Verbose option, to output compile and link commands. true = verbose output, flase = quiet.
 export V := true
 # Version macros
@@ -68,8 +68,14 @@ HEADER_DIR = /usr/include/tools
 ########################################################################################
 # Generally you should not need to edit anything below this line!
 
-#                  get all dist info              extract dist name                      replace spaces with hyphens   add if OS is 32 or 64 bit
-DIST_INFO:=$(shell cat /etc/*-release | sed -nre 's/DISTRIB_DESCRIPTION=\"(.*)\"/\1/p' | sed -nre 's/ /-/p' | sed -nre 's/(.*)/\1_`uname -m`/p')
+ifneq ($(wildcard /etc/*-release),)
+#                      get all dist info              extract dist name                     replace spaces with hyphens   add if OS is 32 or 64 bit
+	DIST_INFO:=$(shell cat /etc/*-release | sed -nre 's/DISTRIB_DESCRIPTION=\"(.*)\"/\1/p' | sed -nre 's/ /-/p' | sed -nre 's/(.*)/\1_`uname -m`/p')
+else
+	DIST_NAME:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Distributor ID:[ \t](.*)/\1/p')
+	DIST_VERSION:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Release:[ \t]([0-9].[0-9]).*/\1/p')
+	DIST_INFO:=$(DIST_NAME)-$(DIST_VERSION)
+endif
 
 # Function used to check variables. Use on the command line:
 # make print-VARNAME
@@ -285,6 +291,7 @@ endif
 	@echo -en $(FG_DEFAULT)
 
 # Make both targets debug and release.
+.PHONY: all
 all:
 	$(MAKE) debug --no-print-directory
 	$(MAKE) release --no-print-directory
