@@ -39,22 +39,22 @@ CXX ?= g++
 SRC_EXT = cpp
 # Path to the source directory, relative to the makefile.
 SRC_PATH = ./src
-# Add here sources which should be ignored for compiling.
+# Add here sources which should be ignored for compiling. Use wildcard eg. *_test.cpp to ignore.
 IGNORE_SOURCE  = ""
 # Space-separated pkg-config libraries used by this project.
 LIBS =
 # General compiler flags
 COMPILE_FLAGS = -std=c++0x -Wall -Wextra
 # Additional release-specific flags.
-RCOMPILE_FLAGS = -O3 -D NDEBUG
+RCOMPILE_FLAGS = -O2 -D NDEBUG
 # Additional debug-specific flags.
 DCOMPILE_FLAGS = -O0 -g3 -D DEBUG
 # Default include directory. Used for installing a library or the printversion header.
-DEFAULT_INCLUDE_DIR = ./inc
+DEFAULT_INCLUDE_DIR = ./include
 # External include directory. Used for conventions or generally applicable headers.
 EXTERNAL_INCLUDE_DIR =
 # Add additional include paths.
-INCLUDES = -I$(DEFAULT_INCLUDE_DIR) -I../inc -I$(EXTERNAL_INCLUDE_DIR)
+INCLUDES = -I$(DEFAULT_INCLUDE_DIR) -I../include -I$(EXTERNAL_INCLUDE_DIR)
 # General linker settings.
 LINK_FLAGS = -L../lib/$(DIST_INFO) -ltest
 # Additional release-specific linker settings.
@@ -68,8 +68,19 @@ HEADER_DIR = /usr/include/tools
 ########################################################################################
 # Generally you should not need to edit anything below this line!
 
-#                  get all dist info              extract dist name                      replace spaces with hyphens   add if OS is 32 or 64 bit
-DIST_INFO:=$(shell cat /etc/*-release | sed -nre 's/DISTRIB_DESCRIPTION=\"(.*)\"/\1/p' | sed -nre 's/ /-/p' | sed -nre 's/(.*)/\1_`uname -m`/p')
+# Get linux version and/or distribution version
+DIST_NAME:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Distributor ID:[ \t](.*)/\1/p')
+DIST_VERSION:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Release:[ \t]([0-9].[0-9]).*/\1/p')
+DIST_INFO:=$(DIST_NAME)-$(DIST_VERSION)
+
+# ifneq ($(wildcard /etc/*-release),)
+#                      get all dist info              extract dist name                     replace spaces with hyphens   add if OS is 32 or 64 bit
+# 	DIST_INFO:=$(shell cat /etc/*-release | sed -nre 's/DISTRIB_DESCRIPTION=\"(.*)\"/\1/p' | sed -nre 's/ /-/p' | sed -nre 's/(.*)/\1_`uname -m`/p')
+# else
+# 	DIST_NAME:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Distributor ID:[ \t](.*)/\1/p')
+# 	DIST_VERSION:=$(shell lsb_release -a 2> /dev/null | sed -nre 's/Release:[ \t]([0-9].[0-9]).*/\1/p')
+# 	DIST_INFO:=$(DIST_NAME)-$(DIST_VERSION)
+# endif
 
 # Function used to check variables. Use on the command line:
 # make print-VARNAME
@@ -144,7 +155,7 @@ install: export TARGET_PATH := $(TARGET)/release
 
 # Find all source files in the source directory, sorted by most
 # recently modified
-SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' -printf '%T@\t%p\n' \
+SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)' -not -name $(IGNORE_SOURCE) -printf '%T@\t%p\n' \
 		  | sort -k 1nr | cut -f2-)
 
 # fallback in case the above fails
@@ -219,12 +230,26 @@ else ifeq ($(USE_SVN), true)
 		override CXXFLAGS := $(CXXFLAGS) -D VERSION_REVISION=$(VERSION_REVISION)
 	else
 		# write V_tag major, v_tag_minor, rev and build
+		VERSION_MAJOR    := $(shell svn info | sed -n "/URL:/s/.*\///p" | sed -nr "s/([0-9]{0,4})\.([0-9]{0,4})\.*(.*)/\1/p")
+		VERSION_MINOR    := $(shell svn info | sed -n "/URL:/s/.*\///p" | sed -nr "s/([0-9]{0,4})\.([0-9]{0,4})\.*(.*)/\2/p")
+		VERSION_PATCH    := $(shell svn info | sed -n "/URL:/s/.*\///p" | sed -nr "s/([0-9]{0,4})\.([0-9]{0,4})\.*(.*)/\3/p")
+		VERSION_REVISION := $(shell svn info | sed -nr 's/Revision:[ \t]([0-9]*)/\1/p')
+		# VERSION_HASH     :=
+		# VERSION_STRING   := "$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH).$(VERSION_REVISION)-$(VERSION_HASH)"
 		ifeq ($(TYPE), $(TARGET_STATIC_LIB))
-			# todo add svn tag support!
-			DUMMY=1
+			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_MAJOR_REF=$(VERSION_MAJOR)
+			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_MINOR_REF=$(VERSION_MINOR)
+			ifneq ($(VERSION_PATCH),)
+				BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_PATCH_REF=$(VERSION_PATCH)
+			endif
+			BUILD_NUMBER_LDFLAGS += --defsym $(TARGET_NAME:.a=)_VERSION_REVISION_REF=$(VERSION_REVISION)
 		else
-			# todo add svn tag support!
-			DUMMY=1
+			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_MAJOR_REF=$(VERSION_MAJOR)
+			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_MINOR_REF=$(VERSION_MINOR)
+			ifneq ($(VERSION_PATCH),)
+				BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_PATCH_REF=$(VERSION_PATCH)
+			endif
+			BUILD_NUMBER_LDFLAGS += -Xlinker --defsym -Xlinker $(TARGET_NAME)_VERSION_REVISION_REF=$(VERSION_REVISION)
 		endif
 	endif
 endif
@@ -285,6 +310,7 @@ endif
 	@echo -en $(FG_DEFAULT)
 
 # Make both targets debug and release.
+.PHONY: all
 all:
 	$(MAKE) debug --no-print-directory
 	$(MAKE) release --no-print-directory
@@ -349,6 +375,29 @@ else
 	@echo -e "Creating no symlink:"$(FG_B_CYAN) "SYMBOLIC_LINK_DIR is undefined "$(FG_DEFAULT)
 endif
 
+# Display build binaries
+.PHONY: show
+show:
+ifneq (, $(wildcard $(SYMBOLIC_LINK_DIR)$(TARGET_NAME)))
+	@echo "===================================================================================================="
+	@printf "  Build Date: %02d." 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_DAY_REF/\1/p')
+	@printf               "%02d." 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_MONTH_REF/\1/p')
+	@printf               "%02d " 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_YEAR_REF/\1/p')
+	@printf               "%02d:" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_HOUR_REF/\1/p')
+	@printf               "%02d:" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_MIN_REF/\1/p')
+	@printf               "%02d\n" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_SEC_REF/\1/p')
+ifeq ($(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/.*VERSION_MAJOR_REF.*/true/p'),true)
+	@printf "  vMajor:   %4d\n" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_VERSION_MAJOR_REF/\1/p')
+endif
+ifeq ($(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/.*VERSION_MINOR_REF.*/true/p'),true)
+	@printf "  vMinor:   %4d\n" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_VERSION_MINOR_REF/\1/p')
+endif
+	@printf "  Build:    %4d\n" 0x$(shell objdump -t $(SYMBOLIC_LINK_DIR)$(TARGET_NAME) | grep REF | sed -nr 's/([0-9abcdef]*).*[0-9abcdef]*[ \t]{1}lib'$(NAME)'_BUILD_NUMBER_REF/\1/p')
+	@echo
+	@tree -Chf $(TARGET)
+	@echo "===================================================================================================="
+endif
+
 # Removes the build number file .version.
 reset:
 	@echo -e $(FG_B_RED)Removing the version information. Next build will be "#1."$(FG_DEFAULT)
@@ -362,6 +411,7 @@ help:
 	@echo "  "debug "  "- builds an gdb debuggable build of this project
 	@echo "  "all "    "- builds both, debug and release
 	@echo "  "reset "  "- resets build number
+	@echo "  "show "   "- display build results \(SYMBOLIC_LINK_DIR=/path to object,TARGET_NAME=obj \(e.g. libModeladfsm.so\),NAME=model \(e.g. adfsm\)\)
 	@echo "  "help "   "- shows this overview
 
 # Link the executable
