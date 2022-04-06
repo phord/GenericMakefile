@@ -2,7 +2,7 @@
 objdump -t $1 | grep REF > /tmp/getVersion.txt
 if [ $# -eq 1 ]
 then
-	# remove file extention of the first argument
+	# remove file extension of the first argument
 	LIST=$(echo $1 | sed -nr "s/(.*)\..*/\1/p")
 
 	if [[ -z $LIST ]]
@@ -15,7 +15,7 @@ then
 
 elif [ $# -eq 2 ]
 then
-	# remove file extention of second argument
+	# remove file extension of second argument
 	LIST=$(echo $2 | sed -nr "s/(.*)\..*/\1/p")
 	if [[ -z $LIST ]]
 	then

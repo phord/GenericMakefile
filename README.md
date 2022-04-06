@@ -52,7 +52,7 @@ Tags should be made in the format "vMAJOR.MINOR.PATCH[-description]", where MAJO
 
 #### How to use the linked references in code
     # Find all references:
-    # The file extention .a of static libraries is removed in the reference symbols.
+    # The file extension .a of static libraries is removed in the reference symbols.
     objdump -t libtest.a | grep REF
 
     # For usage of the additional linked REF symboles see test/src/main.cpp
