@@ -1,8 +1,8 @@
 ########################################################################################
 ##### PROJECT SETTINGS ######
 # The name of the executable to be created
-# The libXXX.a extention will be added. Only XXX has to be specified.
-# For executables a lowercase Camelcase style eg. testExecutable is recomended.
+# The libXXX.a extension will be added. Only XXX has to be specified.
+# For executables a lowercase Camelcase style eg. testExecutable is recommended.
 # For libraries a uppercase Camelcase style eg. JTimer is recomended.
 # The produced library will be lowercase only per convention.
 NAME = Test
@@ -21,11 +21,11 @@ EXE_DIR = ./bin
 LIB_DIR = ./lib
 # The directory where a symbolic link to the latest target will be created.
 # If no SYMBOLIC_LINK_DIR is specified no symbolic link is created.
-# Always make shure to use the path with an appended '/'
+# Always make sure to use the path with an appended '/'
 SYMBOLIC_LINK_DIR = $(TARGET)/$(DIST_INFO)/
-# Use this variable in combination with the SYMBOLIK_LINK_DIR.
+# Use this variable in combination with the SYMBOLIC_LINK_DIR.
 # The delta variable specifies the relative path from the SYMBOLIC_LINK_DIR to the project root.
-# Always make shure to use the path with an appended '/'
+# Always make sure to use the path with an appended '/'
 LIB_SYMLINK_DELTA = ../../
 # Compiler used
 CXX ?= g++
